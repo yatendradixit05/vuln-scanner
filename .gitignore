@@ -1,0 +1,13 @@
+backend/node_modules/
+frontend/node_modules/
+frontend/dist/
+engine/venv/
+engine/__pycache__/
+engine/phases/__pycache__/
+*.pyc
+backend/.env
+backend/..env
+engine/reports/*.pdf
+engine/screenshots/*.png
+structure.txt
+.vite/

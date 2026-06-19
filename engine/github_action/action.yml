@@ -1,0 +1,70 @@
+name: Cyber Sudarshan Security Scan
+description: Automated web vulnerability scanner for CI/CD pipelines
+author: Cyber Sudarshan
+
+inputs:
+  target_url:
+    description: Target URL to scan
+    required: true
+  fail_on:
+    description: Fail build if this severity found (Critical/High/Medium/Low)
+    required: false
+    default: Critical
+  output_report:
+    description: Save PDF report as artifact
+    required: false
+    default: 'true'
+
+outputs:
+  cyber_score:
+    description: Security score (0-1000)
+  grade:
+    description: Security grade (A+ to F)
+  findings_count:
+    description: Total vulnerabilities found
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Dependencies
+      shell: bash
+      run: |
+        pip install requests playwright dnspython reportlab Pillow python-dotenv
+        playwright install chromium
+
+    - name: Run Cyber Sudarshan Scanner
+      shell: bash
+      run: |
+        cd ${{ github.action_path }}/../../engine
+        python cli.py "${{ inputs.target_url }}" \
+          --fail-on "${{ inputs.fail_on }}" \
+          --json \
+          --output scan_report.pdf \
+          > scan_results.json 2>&1 || EXIT_CODE=$?
+
+        echo "SCAN_EXIT_CODE=${EXIT_CODE:-0}" >> $GITHUB_ENV
+
+        if [ -f scan_results.json ]; then
+          SCORE=$(cat scan_results.json | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('score',0))" 2>/dev/null || echo "0")
+          GRADE=$(cat scan_results.json | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('grade','F'))" 2>/dev/null || echo "F")
+          COUNT=$(cat scan_results.json | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('findings',[])))" 2>/dev/null || echo "0")
+          echo "cyber_score=$SCORE" >> $GITHUB_OUTPUT
+          echo "grade=$GRADE" >> $GITHUB_OUTPUT
+          echo "findings_count=$COUNT" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Upload Report
+      if: inputs.output_report == 'true'
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-report
+        path: engine/scan_report.pdf
+
+    - name: Check Exit Code
+      shell: bash
+      run: exit ${SCAN_EXIT_CODE:-0}
