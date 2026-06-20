@@ -16,7 +16,7 @@ async function addToQueue(scanId) {
   io.to(scanId.toString()).emit('scan_update', { status: 'running', phase: 'Phase A: Recon', progress: 0 });
 
   const enginePath = path.join(__dirname, '..', 'engine', 'main.py');
-  const pythonExe  = path.join(__dirname, '..', 'engine', 'venv', 'Scripts', 'python.exe');
+  const pythonExe = process.env.PYTHON_PATH || 'python3';
 
   const python = spawn(pythonExe, [enginePath, scan.targetUrl, scanId.toString()]);
 
