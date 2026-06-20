@@ -12,11 +12,17 @@ const { initQueue } = require('./queue');
 const app    = express();
 const server = http.createServer(app);
 
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'https://vuln-scanner-two.vercel.app'
+];
+
 const io = new Server(server, {
-  cors: { origin: ['http://localhost:5173', 'http://localhost:5174'], methods: ['GET', 'POST'] }
+  cors: { origin: allowedOrigins, methods: ['GET', 'POST'] }
 });
 
-app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:5174'] }));
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 app.get('/', (req, res) => res.json({ status: 'ok', message: 'Cyber Sudarshan API is running' }));
 

@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { io } from 'socket.io-client'
 import axios from 'axios'
 
-const API = 'http://localhost:5000'
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
 const SEV_STYLE = {
   Critical: { background:'#E63946', color:'#fff' },
